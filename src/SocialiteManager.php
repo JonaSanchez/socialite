@@ -3,16 +3,16 @@
 namespace Laravel\Socialite;
 
 use Illuminate\Support\Arr;
-use Illuminate\Support\Manager;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Laravel\Socialite\One\TwitterProvider;
-use Laravel\Socialite\Two\BitbucketProvider;
-use Laravel\Socialite\Two\FacebookProvider;
+use Illuminate\Support\Manager;
 use Laravel\Socialite\Two\GithubProvider;
 use Laravel\Socialite\Two\GitlabProvider;
 use Laravel\Socialite\Two\GoogleProvider;
+use Laravel\Socialite\One\TwitterProvider;
+use Laravel\Socialite\Two\FacebookProvider;
 use Laravel\Socialite\Two\LinkedInProvider;
+use Laravel\Socialite\Two\BitbucketProvider;
 use League\OAuth1\Client\Server\Twitter as TwitterServer;
 
 class SocialiteManager extends Manager implements Contracts\Factory
@@ -38,7 +38,8 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.github'];
 
         return $this->buildProvider(
-            GithubProvider::class, $config
+            GithubProvider::class,
+            $config
         );
     }
 
@@ -52,13 +53,14 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.facebook'];
 
         return $this->buildProvider(
-            FacebookProvider::class, $config
+            FacebookProvider::class,
+            $config
         );
     }
 
     /**
      * Create an instance of the specified driver.
-     *
+     * 
      * @return \Laravel\Socialite\Two\AbstractProvider
      */
     protected function createGoogleDriver()
@@ -66,10 +68,49 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.google'];
 
         return $this->buildProvider(
-            GoogleProvider::class, $config
+            GoogleProvider::class,
+            $config
         );
     }
 
+    /**
+     * Create an instance of the specified driver.
+     * @param  (object)array    (client_id, client_secret)
+     * 
+     * @return \Laravel\Socialite\Two\AbstractProvider
+     */
+    public function createCustomGoogleDriver($credentials = null)
+    {
+        $config = $this->app['config']['services.google'];
+        if ($credentials && $credentials->client_id && $credentials->client_secret) {
+            $config['client_id'] = $credentials->client_id;
+            $config['client_secret'] = $credentials->client_secret;
+        }
+
+        return $this->buildProvider(
+            GoogleProvider::class,
+            $config
+        );
+    }
+
+    /**
+     * Create an instance of the specified driver.
+     * @param  (object)array    (client_id, client_secret)
+     * 
+     * @return \Laravel\Socialite\Two\AbstractProvider
+     */
+    public function createCustomFacebookDriver($credentials = null)
+    {
+        $config = $this->app['config']['services.facebook'];
+        if ($credentials && $credentials->client_id && $credentials->client_secret) {
+            $config['client_id'] = $credentials->client_id;
+            $config['client_secret'] = $credentials->client_secret;
+        }
+        return $this->buildProvider(
+            FacebookProvider::class,
+            $config
+        );
+    }
     /**
      * Create an instance of the specified driver.
      *
@@ -80,7 +121,8 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.linkedin'];
 
         return $this->buildProvider(
-          LinkedInProvider::class, $config
+            LinkedInProvider::class,
+            $config
         );
     }
 
@@ -94,7 +136,8 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.bitbucket'];
 
         return $this->buildProvider(
-          BitbucketProvider::class, $config
+            BitbucketProvider::class,
+            $config
         );
     }
 
@@ -108,7 +151,8 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.gitlab'];
 
         return $this->buildProvider(
-            GitlabProvider::class, $config
+            GitlabProvider::class,
+            $config
         );
     }
 
@@ -122,8 +166,10 @@ class SocialiteManager extends Manager implements Contracts\Factory
     public function buildProvider($provider, $config)
     {
         return new $provider(
-            $this->app['request'], $config['client_id'],
-            $config['client_secret'], $this->formatRedirectUrl($config),
+            $this->app['request'],
+            $config['client_id'],
+            $config['client_secret'],
+            $this->formatRedirectUrl($config),
             Arr::get($config, 'guzzle', [])
         );
     }
@@ -138,7 +184,8 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $config = $this->app['config']['services.twitter'];
 
         return new TwitterProvider(
-            $this->app['request'], new TwitterServer($this->formatConfig($config))
+            $this->app['request'],
+            new TwitterServer($this->formatConfig($config))
         );
     }
 
@@ -168,8 +215,8 @@ class SocialiteManager extends Manager implements Contracts\Factory
         $redirect = value($config['redirect']);
 
         return Str::startsWith($redirect, '/')
-                    ? $this->app['url']->to($redirect)
-                    : $redirect;
+            ? $this->app['url']->to($redirect)
+            : $redirect;
     }
 
     /**
